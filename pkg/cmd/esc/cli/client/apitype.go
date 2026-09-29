@@ -265,6 +265,16 @@ type GetDefaultOrganizationResponse struct {
 	Organization string `json:"gitHubLogin"`
 }
 
+type EnvironmentMetadata struct {
+	ActiveChangeRequest *ChangeRequestRef `json:"activeChangeRequest,omitempty"`
+	GatedActions        []string          `json:"gatedActions,omitempty"`
+}
+
+type ChangeRequestRef struct {
+	ChangeRequestID      string `json:"changeRequestId,omitempty"`
+	LatestRevisionNumber int    `json:"latestRevisionNumber,omitempty"`
+}
+
 type EnvironmentSettings struct {
 	DeletionProtected bool `json:"deletionProtected"`
 }

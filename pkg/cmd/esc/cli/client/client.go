@@ -481,6 +481,15 @@ type Client interface {
 		accessDurationSeconds int,
 	) (*CreateEnvironmentOpenRequestResponse, error)
 
+	// GetEnvironmentMetadata returns metadata for the given environment, including which actions
+	// require change request approval and the caller's open change request, if any.
+	GetEnvironmentMetadata(
+		ctx context.Context,
+		orgName string,
+		projectName string,
+		envName string,
+	) (*EnvironmentMetadata, error)
+
 	// GetEnvironmentSettings returns settings for the given environment.
 	GetEnvironmentSettings(
 		ctx context.Context,
@@ -1612,6 +1621,21 @@ func (pc *client) CreateEnvironmentOpenRequest(
 		return nil, err
 	}
 
+	return &resp, nil
+}
+
+func (pc *client) GetEnvironmentMetadata(
+	ctx context.Context,
+	orgName string,
+	projectName string,
+	envName string,
+) (*EnvironmentMetadata, error) {
+	path := fmt.Sprintf("/api/esc/environments/%v/%v/%v/metadata", orgName, projectName, envName)
+	var resp EnvironmentMetadata
+	err := pc.restCall(ctx, http.MethodGet, path, nil, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
 	return &resp, nil
 }
 

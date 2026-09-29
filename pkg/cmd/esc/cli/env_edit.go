@@ -16,12 +16,14 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os/exec"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -112,6 +114,12 @@ func newEnvEditCmd(env *envCommand) *cobra.Command {
 			editor, err := edit.getEditor()
 			if err != nil {
 				return err
+			}
+
+			if draft == "" {
+				if draft, err = edit.chooseDraft(ctx, ref); err != nil {
+					return err
+				}
 			}
 
 			var yaml []byte
@@ -213,6 +221,37 @@ func newEnvEditCmd(env *envCommand) *cobra.Command {
 	cmd.Flag("draft").NoOptDefVal = "new"
 
 	return cmd
+}
+
+// chooseDraft asks how to proceed when updates to the environment require approval. It returns the
+// --draft value to use, or "" to update the environment directly.
+func (edit *envEditCommand) chooseDraft(ctx context.Context, ref environmentRef) (string, error) {
+	meta, err := edit.env.esc.client.GetEnvironmentMetadata(ctx, ref.orgName, ref.projectName, ref.envName)
+	if err != nil || !slices.Contains(meta.GatedActions, "update") {
+		return "", nil
+	}
+	if !cmdutil.Interactive() {
+		return "", errors.New("this environment requires approval; " +
+			"re-run with --draft to submit your changes as a change request")
+	}
+
+	const createNew, cancel = "Create a new change request", "Cancel"
+	options := []string{createNew, cancel}
+	var editExisting string
+	if cr := meta.ActiveChangeRequest; cr != nil {
+		editExisting = "Edit your open change request " + cr.ChangeRequestID
+		options = append([]string{editExisting}, options...)
+	}
+
+	msg := "This environment requires approval. How would you like to proceed?"
+	switch choice := ui.PromptUser(msg, options, options[0], edit.env.esc.colors); {
+	case choice == createNew:
+		return "new", nil
+	case editExisting != "" && choice == editExisting:
+		return meta.ActiveChangeRequest.ChangeRequestID, nil
+	default:
+		return "", errors.New("edit cancelled")
+	}
 }
 
 func parseEditorCommand(editor string) []string {
