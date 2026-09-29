@@ -28,7 +28,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/pulumi/pulumi/pkg/v3/cmd/esc/cli/client"
+	"github.com/pulumi/pulumi/pkg/v3/cmd/pulumi/ui"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/esc"
+	"github.com/pulumi/pulumi/sdk/v3/go/common/util/cmdutil"
 	"github.com/pulumi/pulumi/sdk/v3/go/common/util/contract"
 )
 
@@ -153,6 +155,14 @@ func newEnvEditCmd(env *envCommand) *cobra.Command {
 				}
 
 				diags, err := edit.env.esc.updateEnvironment(ctx, ref, draft, newYAML, tag, "Environment updated.")
+				if draft == "" && isApprovalRequired(err) && cmdutil.Interactive() {
+					msg := "This environment requires approval. Submit your changes as a change request?"
+					if ui.PromptUser(msg, []string{"yes", "no"}, "yes", edit.env.esc.colors) != "yes" {
+						return err
+					}
+					draft = "new"
+					diags, err = edit.env.esc.updateEnvironment(ctx, ref, draft, newYAML, tag, "Environment updated.")
+				}
 				if err != nil {
 					return err
 				}
