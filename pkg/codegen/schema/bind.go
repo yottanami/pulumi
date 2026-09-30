@@ -649,14 +649,19 @@ func (spec *PackageSpec) validateTypeToken(
 			return diags
 		}
 	}
+	moduleMatched := true
 	if moduleFormat != nil {
 		matches := moduleFormat.FindStringSubmatch(moduleName)
 		if len(matches) > 1 {
 			moduleName = matches[1]
+		} else {
+			moduleMatched = false
 		}
 	}
 
-	if (moduleName == "" || strings.EqualFold(moduleName, "index")) && strings.EqualFold(parts[2], "provider") {
+	// Codegen places a module the moduleFormat doesn't match in the root module (see TokenToModule).
+	inRoot := !moduleMatched || moduleName == "" || strings.EqualFold(moduleName, "index")
+	if inRoot && strings.EqualFold(parts[2], "provider") {
 		err := errorf(path, "invalid token '%s' (provider is a reserved word for the root module)", token)
 		diags = diags.Append(err)
 	}

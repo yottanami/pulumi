@@ -1,4 +1,4 @@
 component: sdkgen
 kind: fix
-body: Reject resources named `provider` in the root module when the schema sets `moduleFormat`, instead of panicking with a duplicate file error during SDK generation
+body: Return a schema error instead of panicking when a resource named provider resolves to the root module
 time: 2026-09-30T06:10:19.46857037+02:00
