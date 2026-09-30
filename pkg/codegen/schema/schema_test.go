@@ -444,6 +444,7 @@ func TestInvalidTypes(t *testing.T) {
 		{"bad-type-4.json", "invalid token 'noParts' (should have three parts); "},
 		{"bad-type-5.json", "invalid token 'fake-provider:index/provider:Provider' (provider is a reserved word for the root module)"},
 		{"bad-type-6.json", "invalid token 'fake-provider:foo:Provider' (provider is a reserved word for the root module)"},
+		{"bad-type-7.json", "invalid token 'fake-provider:foo:provider' (provider is a reserved word for the root module)"},
 	}
 
 	for _, tt := range tests {
@@ -456,6 +457,42 @@ func TestInvalidTypes(t *testing.T) {
 				AllowDanglingReferences: true,
 			})
 			assert.ErrorContains(t, err, tt.expected)
+		})
+	}
+}
+
+// Types named provider don't get their own file, so they may resolve to the root module.
+func TestTypeNamedProviderStillBinds(t *testing.T) {
+	t.Parallel()
+
+	for _, tok := range []string{"fake-provider:index/provider:Provider", "fake-provider:foo:Provider"} {
+		t.Run(tok, func(t *testing.T) {
+			t.Parallel()
+
+			ref := "#/types/" + tok
+			spec := PackageSpec{
+				Name:    "fake-provider",
+				Version: "0.0.1",
+				Meta:    &MetadataSpec{ModuleFormat: "(.*)(?:/[^/]*)"},
+				Types: map[string]ComplexTypeSpec{
+					tok: {ObjectTypeSpec: ObjectTypeSpec{
+						Type:       "object",
+						Properties: map[string]PropertySpec{"x": {TypeSpec: TypeSpec{Type: "string"}}},
+					}},
+				},
+				Resources: map[string]ResourceSpec{
+					"fake-provider:index/widget:Widget": {
+						ObjectTypeSpec: ObjectTypeSpec{
+							Type:       "object",
+							Properties: map[string]PropertySpec{"p": {TypeSpec: TypeSpec{Ref: ref}}},
+						},
+						InputProperties: map[string]PropertySpec{"p": {TypeSpec: TypeSpec{Ref: ref}}},
+					},
+				},
+			}
+
+			_, err := ImportSpec(spec, nil, NewNullLoader(), ValidationOptions{})
+			require.NoError(t, err)
 		})
 	}
 }

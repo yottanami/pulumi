@@ -1,0 +1,19 @@
+{
+  "name": "fake-provider",
+  "version": "0.0.1",
+  "meta": {
+    "moduleFormat": "(.*)(?:/[^/]*)"
+  },
+  "functions": {
+    "fake-provider:foo:provider": {
+      "outputs": {
+        "properties": {
+          "a": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      }
+    }
+  }
+}

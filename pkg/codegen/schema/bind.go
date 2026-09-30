@@ -659,9 +659,12 @@ func (spec *PackageSpec) validateTypeToken(
 		}
 	}
 
+	rawRoot := parts[1] == "" || strings.EqualFold(parts[1], "index")
 	// Codegen places a module the moduleFormat doesn't match in the root module (see TokenToModule).
-	inRoot := !moduleMatched || moduleName == "" || strings.EqualFold(moduleName, "index")
-	if inRoot && strings.EqualFold(parts[2], "provider") {
+	resolvedRoot := !moduleMatched || moduleName == "" || strings.EqualFold(moduleName, "index")
+	// Only resources and functions get their own provider.* file, so only they collide after moduleFormat.
+	collides := section == "resources" || section == "functions"
+	if (rawRoot || (collides && resolvedRoot)) && strings.EqualFold(parts[2], "provider") {
 		err := errorf(path, "invalid token '%s' (provider is a reserved word for the root module)", token)
 		diags = diags.Append(err)
 	}
