@@ -636,10 +636,6 @@ func (spec *PackageSpec) validateTypeToken(
 		err := errorf(path, "invalid token '%s' (must have package name '%s')", token, spec.Name)
 		diags = diags.Append(err)
 	}
-	if (parts[1] == "" || strings.EqualFold(parts[1], "index")) && strings.EqualFold(parts[2], "provider") {
-		err := errorf(path, "invalid token '%s' (provider is a reserved word for the root module)", token)
-		diags = diags.Append(err)
-	}
 	moduleName := parts[1]
 
 	// Check if this is a nested index module, we need to use the module format regex to determine this because
@@ -658,6 +654,11 @@ func (spec *PackageSpec) validateTypeToken(
 		if len(matches) > 1 {
 			moduleName = matches[1]
 		}
+	}
+
+	if (moduleName == "" || strings.EqualFold(moduleName, "index")) && strings.EqualFold(parts[2], "provider") {
+		err := errorf(path, "invalid token '%s' (provider is a reserved word for the root module)", token)
+		diags = diags.Append(err)
 	}
 
 	if strings.HasPrefix(moduleName, "index/") {
