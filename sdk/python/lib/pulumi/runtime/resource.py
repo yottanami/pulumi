@@ -421,7 +421,7 @@ def inherited_child_alias(
 
 # Extract the type and name parts of a URN
 def urn_type_and_name(urn: str) -> tuple[str, str]:
-    parts = urn.split("::")
+    parts = urn.split("::", 3)
     type_parts = parts[2].split("$")
     return (parts[3], type_parts[-1])
 

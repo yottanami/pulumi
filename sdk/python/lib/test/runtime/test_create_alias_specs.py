@@ -1,5 +1,5 @@
 import pytest
-from pulumi.runtime.resource import create_alias_spec
+from pulumi.runtime.resource import create_alias_spec, urn_type_and_name
 from pulumi.resource import Alias
 
 
@@ -38,3 +38,9 @@ async def test_create_alias_spec_with_parent():
     assert alias_spec is not None
     assert alias_spec.noParent is False
     assert alias_spec.parentUrn == "pulumi:pulumi:Stack"
+
+
+def test_urn_type_and_name_with_name_separator():
+    assert urn_type_and_name(
+        "urn:pulumi:stack::project::my:mod:Parent$my:mod:Child::a::b"
+    ) == ("a::b", "my:mod:Child")

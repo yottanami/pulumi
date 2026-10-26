@@ -22,7 +22,7 @@ _UrnParts = namedtuple(
 
 def _parse_urn(urn: str) -> _UrnParts:
     try:
-        urn_parts = urn.split("::")
+        urn_parts = urn.split("::", 3)
         urn_name = urn_parts[3] if len(urn_parts) >= 4 else ""
         qualified_type = urn_parts[2]
         typ = qualified_type.split("$")[-1]

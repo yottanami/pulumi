@@ -25,16 +25,16 @@ def _extract_type(urn: str) -> str:
     """
     Helper method to extract the type from a URN.
     """
-    parts = urn.split("::")
-    return parts[-2] if len(parts) > 1 else ""
+    parts = urn.split("::", 3)
+    return parts[2] if len(parts) > 2 else ""
 
 
 def _extract_name(urn: str) -> str:
     """
     Helper method to extract the name from a URN.
     """
-    parts = urn.split("::")
-    return parts[-1] if len(parts) > 1 else ""
+    parts = urn.split("::", 3)
+    return parts[3] if len(parts) > 3 else ""
 
 
 class Parameters:
